@@ -54,7 +54,8 @@ static void (*kb_all_keys_up)(void) = NULL;
 // whether to use timer for frame control
 static bool use_timer = true;
 // time between consequtive game frames
-static const int frame_time = 1000 / (2 * FRAMERATE);
+static const int frame_time_60FPS = 1000 / (2 * FRAMERATE);
+static const int frame_time_30FPS = 1000 / FRAMERATE;
 
 
 const SDL_Scancode windows_scancode_table[] = {
@@ -141,32 +142,9 @@ int test_vsync(void) {
 }
 
 static inline void gfx_sdl_set_vsync(const bool enabled) {
-#ifdef TARGET_SWITCH
-    use_timer = false;
-        SDL_GL_SetSwapInterval(1);
-#else
-    if (enabled) {
-        // try to detect refresh rate
-        SDL_GL_SetSwapInterval(1);
-        int vblanks = test_vsync();
-        if (vblanks & 1)
-            vblanks = 0; // not divisible by 60, fuck that
-        else
-            vblanks /= 2;
-
-        if (vblanks) {
-            printf("determined swap interval: %d\n", vblanks);
-            SDL_GL_SetSwapInterval(vblanks);
-            use_timer = false;
-            return;
-        } else {
-            printf("could not determine swap interval, falling back to timer sync\n");
-        }
-    }
-
     use_timer = true;
     SDL_GL_SetSwapInterval(0);
-#endif
+    return;
 }
 
 static void gfx_sdl_set_fullscreen(void) {
@@ -357,9 +335,15 @@ static inline void sync_framerate_with_timer(void) {
     // get base timestamp on the first frame (might be different from 0)
     if (last_time == 0) last_time = SDL_GetTicks();
     const int elapsed = SDL_GetTicks() - last_time;
-    if (elapsed < frame_time)
-        SDL_Delay(frame_time - elapsed);
-    last_time += frame_time;
+    if(config60FPS){
+        if (elapsed < frame_time_60FPS)
+            SDL_Delay(frame_time_60FPS - elapsed);
+        last_time += frame_time_60FPS;
+    }else{
+        if (elapsed < frame_time_30FPS)
+            SDL_Delay(frame_time_30FPS - elapsed);
+        last_time += frame_time_30FPS;
+    }
 }
 
 static void gfx_sdl_swap_buffers_begin(void) {
