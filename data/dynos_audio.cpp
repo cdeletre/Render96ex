@@ -11,6 +11,13 @@ extern "C" {
 #define MUSIC_CHANNELS		2
 #define SOUND_CHANNELS		1
 
+unsigned int detectedMusicFreq  = 0;
+unsigned int detectedMusicChan  = 0;
+unsigned int detectedJingleFreq = 0;
+unsigned int detectedJingleChan = 0;
+unsigned int detectedSoundFreq    = 0;
+unsigned int detectedSoundChan    = 0;
+
 static bool TokenizeBuffer(char *aBuffer, char **aTokens, s32 aTokenMax) {
     bool dq = false;
     for (char *p = NULL; *aBuffer != 0 && aTokenMax > 0; ++aBuffer) {
@@ -118,9 +125,14 @@ static SDL_AudioDeviceID DynOS_Music_GetDevice() {
 
     // Open music device
     SDL_AudioSpec _Want, _Have;
-    _Want.freq     = AUDIO_FREQUENCY_44100;
+    if(detectedMusicFreq == 0){
+        _Want.freq     = AUDIO_FREQUENCY_44100;
+        _Want.channels = MUSIC_CHANNELS;
+    }else{
+        _Want.freq     = detectedMusicFreq;
+        _Want.channels = detectedMusicChan;
+    }
     _Want.format   = AUDIO_FORMAT;
-    _Want.channels = MUSIC_CHANNELS;
     _Want.samples  = AUDIO_BUFFER_SIZE;
     _Want.callback = DynOS_Music_Callback;
     _Want.userdata = NULL;
@@ -163,24 +175,24 @@ bool DynOS_Music_LoadWav(const String &aName, const SysPath &aFilename, s32 aLoo
         sys_fatal("DynOS_Music_LoadWav: Unable to load file %s.", aFilename.c_str());
         return false;
     }
-    if (_Spec.freq != AUDIO_FREQUENCY_44100) {
-        sys_fatal("DynOS_Music_LoadWav: From file %s, audio frequency should be %d, is %d.", aFilename.c_str(), AUDIO_FREQUENCY_44100, _Spec.freq);
-        return false;
-    }
+
     if (_Spec.format != AUDIO_FORMAT) {
         sys_fatal("DynOS_Music_LoadWav: From file %s, audio format is not Signed 16-bit PCM.", aFilename.c_str());
         return false;
     }
-    if (_Spec.channels != MUSIC_CHANNELS) {
-        sys_fatal("DynOS_Music_LoadWav: From file %s, audio channel count should be %d, is %d.", aFilename.c_str(), MUSIC_CHANNELS, _Spec.channels);
-        return false;
+
+    if (detectedMusicFreq == 0) {
+        detectedMusicFreq = _Spec.freq;
+        detectedMusicChan = _Spec.channels;
+    }else if (detectedMusicFreq != _Spec.freq || detectedMusicChan != _Spec.channels){
+        sys_fatal("DynOS_Music_LoadWav: From file %s, audio format (frequence and number of channels) must be the same for all music files.", aFilename.c_str());
     }
 
     MusicData *_MusicData = New<MusicData>();
     _MusicData->mName     = aName;
     _MusicData->mData     = _Data;
     _MusicData->mLength   = _Length;
-    _MusicData->mLoop     = aLoop * sizeof(s16) * MUSIC_CHANNELS;
+    _MusicData->mLoop     = aLoop * sizeof(s16) * detectedMusicChan;
     _MusicData->mCurrent  = 0;
     _MusicData->mVolume   = aVolume;
     _MusicData->mVolMulti = 0.0f;
@@ -315,9 +327,14 @@ static SDL_AudioDeviceID DynOS_Sound_GetDevice(u8 aBank) {
 
     // Open sound device
     SDL_AudioSpec _Want, _Have;
-    _Want.freq     = AUDIO_FREQUENCY_32000;
+    if(detectedSoundFreq == 0){
+        _Want.freq     = AUDIO_FREQUENCY_32000;
+        _Want.channels = SOUND_CHANNELS;
+    }else{
+        _Want.freq     = detectedSoundFreq;
+        _Want.channels = detectedSoundChan;
+    }
     _Want.format   = AUDIO_FORMAT;
-    _Want.channels = SOUND_CHANNELS;
     _Want.samples  = AUDIO_BUFFER_SIZE;
     _Want.callback = NULL;
     _Want.userdata = NULL;
@@ -358,17 +375,17 @@ bool DynOS_Sound_LoadWav(const String& aName, u8 aBank, const SysPath& aFilename
         sys_fatal("DynOS_Sound_LoadWav: Unable to load file %s.", aFilename.c_str());
         return false;
     }
-    if (_Spec.freq != AUDIO_FREQUENCY_32000) {
-        sys_fatal("DynOS_Sound_LoadWav: From file %s, audio frequency should be %d, is %d.", aFilename.c_str(), AUDIO_FREQUENCY_32000, _Spec.freq);
-        return false;
-    }
+
     if (_Spec.format != AUDIO_FORMAT) {
         sys_fatal("DynOS_Sound_LoadWav: From file %s, audio format is not Signed 16-bit PCM.", aFilename.c_str());
         return false;
     }
-    if (_Spec.channels != SOUND_CHANNELS) {
-        sys_fatal("DynOS_Sound_LoadWav: From file %s, audio channel count should be %d, is %d.", aFilename.c_str(), SOUND_CHANNELS, _Spec.channels);
-        return false;
+
+    if (detectedSoundFreq == 0) {
+        detectedSoundFreq = _Spec.freq;
+        detectedSoundChan = _Spec.channels;
+    }else if (detectedSoundFreq != _Spec.freq || detectedSoundChan != _Spec.channels){
+        sys_fatal("DynOS_Sound_LoadWav: From file %s, audio format (frequence and number of channels) must be the same for all sound files.", aFilename.c_str());
     }
 
     SoundData *_SoundData = New<SoundData>();
@@ -540,9 +557,14 @@ static SDL_AudioDeviceID DynOS_Jingle_GetDevice() {
 
     // Open jingle device
     SDL_AudioSpec _Want, _Have;
-    _Want.freq     = AUDIO_FREQUENCY_44100;
+    if(detectedJingleFreq == 0){
+        _Want.freq     = AUDIO_FREQUENCY_44100;
+        _Want.channels = MUSIC_CHANNELS;
+    }else{
+        _Want.freq     = detectedJingleFreq;
+        _Want.channels = detectedJingleChan;
+    }
     _Want.format   = AUDIO_FORMAT;
-    _Want.channels = MUSIC_CHANNELS;
     _Want.samples  = AUDIO_BUFFER_SIZE;
     _Want.callback = DynOS_Jingle_Callback;
     _Want.userdata = NULL;
@@ -585,24 +607,24 @@ bool DynOS_Jingle_LoadWav(const String &aName, const SysPath &aFilename, s32 aLo
         sys_fatal("DynOS_Jingle_LoadWav: Unable to load file %s.", aFilename.c_str());
         return false;
     }
-    if (_Spec.freq != AUDIO_FREQUENCY_44100) {
-        sys_fatal("DynOS_Jingle_LoadWav: From file %s, audio frequency should be %d, is %d.", aFilename.c_str(), AUDIO_FREQUENCY_44100, _Spec.freq);
-        return false;
-    }
+    
     if (_Spec.format != AUDIO_FORMAT) {
         sys_fatal("DynOS_Jingle_LoadWav: From file %s, audio format is not Signed 16-bit PCM.", aFilename.c_str());
         return false;
     }
-    if (_Spec.channels != MUSIC_CHANNELS) {
-        sys_fatal("DynOS_Jingle_LoadWav: From file %s, audio channel count should be %d, is %d.", aFilename.c_str(), MUSIC_CHANNELS, _Spec.channels);
-        return false;
+
+    if (detectedJingleFreq == 0) {
+        detectedJingleFreq = _Spec.freq;
+        detectedJingleChan = _Spec.channels;
+    }else if (detectedJingleFreq != _Spec.freq || detectedJingleChan != _Spec.channels){
+        sys_fatal("DynOS_Jingle_LoadWav: From file %s, audio format (frequence and number of channels) must be the same for all jingle files.", aFilename.c_str());
     }
 
     JingleData *_JingleData = New<JingleData>();
     _JingleData->mName     = aName;
     _JingleData->mData     = _Data;
     _JingleData->mLength   = _Length;
-    _JingleData->mLoop     = aLoop * sizeof(s16) * MUSIC_CHANNELS;
+    _JingleData->mLoop     = aLoop * sizeof(s16) * detectedJingleChan;
     _JingleData->mCurrent  = 0;
     _JingleData->mVolume   = aVolume;
     _JingleData->mVolMulti = 0.0f;
