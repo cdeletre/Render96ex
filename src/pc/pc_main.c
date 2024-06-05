@@ -228,6 +228,7 @@ void main_func(char *argv[]) {
     const char *userpath = gCLIOpts.SavePath[0] ? gCLIOpts.SavePath : sys_user_path();    
     fs_init(sys_ropaths, gamedir, userpath);
     configfile_load(configfile_name());
+    demo_data_load();
 
     alloc_dialog_pool(argv[0], gamedir);
 

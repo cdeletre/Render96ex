@@ -433,6 +433,15 @@ TEXTS_COPY_RES := \
 
 TEXTS_BUILD_RES := $(shell $(call TEXTS_COPY_RES))
 
+# Copy the demo files
+DEMO_IN_RES_DIR := ./assets/demos
+DEMO_OUT_RES_DIR := $(BUILD_DIR)/$(BASEDIR)/demos
+DEMO_COPY_RES := \
+    mkdir -p $(DEMO_OUT_RES_DIR); \
+    cp $(DEMO_IN_RES_DIR)/* $(DEMO_OUT_RES_DIR);
+
+DEMO_BUILD_RES := $(shell $(call DEMO_COPY_RES))
+
 ##################### Compiler Options #######################
 INCLUDE_CFLAGS := $(PLATFORM_CFLAGS) -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth

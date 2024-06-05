@@ -60,7 +60,7 @@ def main():
         with open("assets/demos/" + item["name"] + ".bin", "rb") as file:
             demobytes = file.read()
         structdef.append("u8 " + item["name"] + "[" + str(len(demobytes)) + "];")
-        structobj.append("{" + ",".join(hex(x) for x in demobytes) + "},")
+        structobj.append("{},")
 
     print("#include \"types.h\"")
     print("#include <stddef.h>")
@@ -73,6 +73,34 @@ def main():
     for s in structobj:
         print(s)
     print("};")
+
+    print('')
+
+
+    print('int demo_data_load(){')
+    print('    fs_file_t *file;')
+    print('    int size;')
+    print('    printf("Loading demo data\\n");')
+
+
+
+    for item in demofiles:
+        demoname=item["name"]
+        print('    printf("Loading %s.bin\\n");' % demoname)
+        print('    file = fs_open("./demos/%s.bin");' % demoname)
+        print('    if (file == NULL) {')
+        print('        printf("Cannot open file\\n");')
+        print('    }')
+        print('    if((size = fs_read(file, gDemoInputs.%s, sizeof(gDemoInputs.%s))) != sizeof(gDemoInputs.%s)){' % (demoname,demoname,demoname))
+        print('        printf("Warning: expecting %' + 'd bytes but only got %' + 'd.\\n",sizeof(gDemoInputs.%s),size);' % demoname)
+        print('    }')
+        print('    printf("%' + 'd bytes read\\n", size);')
+        print('    fs_close(file);')
+        print('')
+    
+    print('    printf("Demo data loaded\\n");')
+    print('    return 0;')
+    print('}')
 
 if __name__ == "__main__":
     main()
