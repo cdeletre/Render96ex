@@ -57,8 +57,6 @@ def main():
     structobj.append("},")
 
     for item in demofiles:
-        with open("assets/demos/" + item["name"] + ".bin", "rb") as file:
-            demobytes = file.read()
         structdef.append("u8 " + item["name"] + "[" + str(len(demobytes)) + "];")
         structobj.append("{},")
 
