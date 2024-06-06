@@ -699,14 +699,14 @@ BASEPACK_LST := $(BUILD_DIR)/basepack.lst
 ifneq ($(NO_COPY),1)
 
 # depend on resources as well
-all: $(BASEPACK_PATH)
+#all: $(BASEPACK_PATH)
 
 # phony target for building resources
 res: $(BASEPACK_PATH)
 
 # prepares the basepack.lst
 ifneq ($(SKIP_BASEPACK),1)
-$(BASEPACK_LST): $(EXE)
+$(BASEPACK_LST): $(SOUND_BIN_DIR)/bank_sets $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/sequences.bin
 	@mkdir -p $(BUILD_DIR)/$(BASEDIR)
 	@touch $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/bank_sets sound/bank_sets" >> $(BASEPACK_LST)
@@ -795,8 +795,17 @@ $(SOUND_BIN_DIR)/%.m64: $(SOUND_BIN_DIR)/%.o
 $(SOUND_BIN_DIR)/%.o: $(SOUND_BIN_DIR)/%.s
 	$(AS) $(ASFLAGS) -o $@ $<
 
-$(SOUND_BIN_DIR)/%.inc.c: $(SOUND_BIN_DIR)/%
-	$(ZEROTERM) "$(patsubst $(BUILD_DIR)/%,%,$^)" | hexdump -v -e '1/1 "0x%X,"' > $@
+$(SOUND_BIN_DIR)/sound_data.ctl.inc.c:
+	$(ZEROTERM) "sound/sound_data.ctl" | hexdump -v -e '1/1 "0x%X,"' > $@
+
+$(SOUND_BIN_DIR)/sound_data.tbl.inc.c:
+	$(ZEROTERM) "sound/sound_data.tbl" | hexdump -v -e '1/1 "0x%X,"' > $@
+
+$(SOUND_BIN_DIR)/sequences.bin.inc.c:
+	$(ZEROTERM) "sound/sequences.bin" | hexdump -v -e '1/1 "0x%X,"' > $@
+
+$(SOUND_BIN_DIR)/bank_sets.inc.c:
+	$(ZEROTERM) "sound/bank_sets" | hexdump -v -e '1/1 "0x%X,"' > $@
 
 $(SOUND_BIN_DIR)/sound_data.o: $(SOUND_BIN_DIR)/sound_data.ctl.inc.c $(SOUND_BIN_DIR)/sound_data.tbl.inc.c $(SOUND_BIN_DIR)/sequences.bin.inc.c $(SOUND_BIN_DIR)/bank_sets.inc.c
 
@@ -815,7 +824,7 @@ $(BUILD_DIR)/assets/wario_anim_data.c: $(wildcard assets/wario_anims/*.inc.c)
 	$(PYTHON) tools/wario_anims_converter.py > $@
 
 $(BUILD_DIR)/assets/demo_data.c: assets/demo_data.json $(wildcard assets/demos/*.bin)
-	$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(VERSION_CFLAGS) > $@
+	$(PYTHON) tools/demo_data_converter.py assets/demo_data.json assets.json $(VERSION_CFLAGS) > $@
 
 # Source code
 $(BUILD_DIR)/levels/%/leveldata.o: OPT_FLAGS := -g
