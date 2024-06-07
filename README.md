@@ -42,8 +42,7 @@ docker run --rm -v ${PWD}:/render96 render96builder:arm64 make NOEXTRACT=1 -j4
 ## Install the binary (EXE)
 
 ```
-mkdir render96
-mkdir 
+mkdir render96 
 cp build/us_pc/sm64.us.f3dex2e render96
 ```
 
