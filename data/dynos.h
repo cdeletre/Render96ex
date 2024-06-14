@@ -29,7 +29,7 @@ extern "C" {
 
 #define DYNOS_VERSION           "1.1.alpha"
 #define DYNOS_EXE_FOLDER        sys_exe_path()
-#define DYNOS_USER_FOLDER       sys_user_path()
+#define DYNOS_USER_FOLDER       "conf"
 #define DYNOS_RES_FOLDER        "dynos"
 #define DYNOS_GFX_FOLDER        DYNOS_RES_FOLDER "/gfx"
 #define DYNOS_AUDIO_FOLDER      DYNOS_RES_FOLDER "/audio"

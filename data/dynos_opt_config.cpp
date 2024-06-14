@@ -7,7 +7,7 @@ static bool DynOS_Opt_ReadConfig(DynosOption *aOpt, void *aData) {
 }
 
 void DynOS_Opt_LoadConfig(DynosOption *aMenu) {
-    SysPath _Filename = fstring("%s/%s", DYNOS_USER_FOLDER, DYNOS_CONFIG_FILENAME);
+    SysPath _Filename = fstring("%s/%s/%s", DYNOS_EXE_FOLDER, DYNOS_USER_FOLDER, DYNOS_CONFIG_FILENAME);
     FILE *_File = fopen(_Filename.c_str(), "r");
     if (_File) {
         char _Buffer[1024];
@@ -53,7 +53,7 @@ static bool DynOS_Opt_WriteConfig(DynosOption *aOpt, void *aData) {
 }
 
 void DynOS_Opt_SaveConfig(DynosOption *aMenu) {
-    SysPath _Filename = fstring("%s/%s", DYNOS_USER_FOLDER, DYNOS_CONFIG_FILENAME);
+    SysPath _Filename = fstring("%s/%s/%s", DYNOS_EXE_FOLDER, DYNOS_USER_FOLDER, DYNOS_CONFIG_FILENAME);
     FILE *_File = fopen(_Filename.c_str(), "w");
     if (_File) {
         DynOS_Opt_Loop(aMenu, DynOS_Opt_WriteConfig, (void *) _File);
