@@ -35,8 +35,16 @@ docker build --platform=linux/amd64 . -t render96builder:amd64
 
 ## Build binary (EXE) using docker image (arm64)
 
+### OpenGL
+
 ```
 docker run --rm -v ${PWD}:/render96 render96builder:arm64 make NOEXTRACT=1 -j4
+```
+
+### GLES
+
+```
+docker run --rm -v ${PWD}:/render96 render96builder:arm64 make NOEXTRACT=1 USE_GLES=1 -j4
 ```
 
 ## Install the binary (EXE)
