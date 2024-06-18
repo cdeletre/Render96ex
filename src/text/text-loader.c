@@ -223,6 +223,8 @@ static void alloc_languages(char *exePath, char *gameDir) {
             // Load JSON
             char filename[FILENAME_MAX];
             snprintf(filename, FILENAME_MAX, "%s%s", languagesDir, namelist[i]->d_name);
+            free(namelist[i]);
+            
             printf("Loading File: %s\n", filename);
             char *jsonTxt = read_file(filename);
             if (jsonTxt != NULL) {
@@ -235,6 +237,8 @@ static void alloc_languages(char *exePath, char *gameDir) {
         }
 
     }
+
+    free(namelist);
 
     // Abort if no file loaded
     if (!languages[0]) {
