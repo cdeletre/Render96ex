@@ -211,28 +211,29 @@ static void alloc_languages(char *exePath, char *gameDir) {
     snprintf(languagesDir, FILENAME_MAX, "%s/%s/texts/", exeDir, gameDir);
 
     // Scan directory for JSON files
-    DIR *dir = opendir(languagesDir);
-    if (dir) {
-        struct dirent *de;
-        while ((de = readdir(dir)) != NULL) {
-            const char *extension = get_filename_ext(de->d_name);
-            if (strcmp(extension, "json") == 0) {
+    struct dirent **namelist;
+    int n;
 
-                // Load JSON
-                char filename[FILENAME_MAX];
-                snprintf(filename, FILENAME_MAX, "%s%s", languagesDir, de->d_name);
-                printf("Loading File: %s\n", filename);
-                char *jsonTxt = read_file(filename);
-                if (jsonTxt != NULL) {
-                    load_language(jsonTxt);
-                    free(jsonTxt);
-                } else {
-                    fprintf(stderr, "Loading File: Error reading '%s'\n", filename);
-                    exit(1);
-                }
+    n = scandir(languagesDir, &namelist, NULL, alphasort);
+    
+    for(int i=0; i < n; i++){
+        const char *extension = get_filename_ext(namelist[i]->d_name);
+        if (strcmp(extension, "json") == 0) {
+            
+            // Load JSON
+            char filename[FILENAME_MAX];
+            snprintf(filename, FILENAME_MAX, "%s%s", languagesDir, namelist[i]->d_name);
+            printf("Loading File: %s\n", filename);
+            char *jsonTxt = read_file(filename);
+            if (jsonTxt != NULL) {
+                load_language(jsonTxt);
+                free(jsonTxt);
+            } else {
+                fprintf(stderr, "Loading File: Error reading '%s'\n", filename);
+                exit(1);
             }
         }
-        closedir(dir);
+
     }
 
     // Abort if no file loaded
