@@ -123,6 +123,13 @@ static SDL_AudioDeviceID DynOS_Music_GetDevice() {
         }
     }
 
+    // DEBUG
+    const int countAudioDevices = SDL_GetNumAudioDevices(0);
+    printf("detectedMusicFreq=%d, detectedMusicChan=%d, countAudioDevices=%d\n",detectedMusicFreq,detectedMusicChan,countAudioDevices);
+    for (int index=0; index < countAudioDevices; index++){
+        printf("Audiodevice[%i]=%s\n", index, SDL_GetAudioDeviceName(index,0));
+    }
+
     // Open music device
     SDL_AudioSpec _Want, _Have;
     if(detectedMusicFreq == 0){
@@ -138,7 +145,9 @@ static SDL_AudioDeviceID DynOS_Music_GetDevice() {
     _Want.userdata = NULL;
     sMusicDeviceId = SDL_OpenAudioDevice(NULL, 0, &_Want, &_Have, 0);
     if (sMusicDeviceId == 0) {
-        sys_fatal("DynOS_Music_GetDevice: Could not open music device.");
+        sys_fatal("DynOS_Music_GetDevice: Could not open music device. (%s)", SDL_GetError());
+    }else{
+        printf("DynOS_Music_GetDevice: music device opened\n");
     }
     SDL_PauseAudioDevice(sMusicDeviceId, 0);
     return sMusicDeviceId;
@@ -172,7 +181,7 @@ bool DynOS_Music_LoadWav(const String &aName, const SysPath &aFilename, s32 aLoo
     u8 *_Data;
     s32 _Length;
     if (!SDL_LoadWAV(aFilename.c_str(), &_Spec, &_Data, (u32 *) &_Length)) {
-        sys_fatal("DynOS_Music_LoadWav: Unable to load file %s.", aFilename.c_str());
+        sys_fatal("DynOS_Music_LoadWav: Unable to load file %s. (%s)", aFilename.c_str(), SDL_GetError());
         return false;
     }
 
@@ -231,6 +240,12 @@ bool DynOS_Music_LoadPresets(const SysPath &aFilename, const SysPath &aFolder) {
 }
 
 void DynOS_Music_Play(const String& aName) {
+
+    // No music was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedMusicFreq == 0) {
+        return;
+    }
+
     s32 _MusicDataIndex = sLoadedMusics.FindIf([&aName](const MusicData *aMusicData) { return aMusicData->mName == aName; });
     if (_MusicDataIndex == -1) {
         return;
@@ -246,6 +261,12 @@ void DynOS_Music_Play(const String& aName) {
 }
 
 void DynOS_Music_Multi_Play(const String& aName) {
+
+    // No music was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedMusicFreq == 0) {
+        return;
+    }
+
     s32 _MusicDataIndex = sLoadedMusics.FindIf([&aName](const MusicData *aMusicData) { return aMusicData->mName == aName; });
     if (_MusicDataIndex == -1) {
         return;
@@ -262,6 +283,12 @@ void DynOS_Music_Multi_Play(const String& aName) {
 }
 
 void DynOS_Music_Stop() {
+
+    // No music was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedMusicFreq == 0) {
+        return;
+    }
+
     SDL_LockAudioDevice(DynOS_Music_GetDevice());
     mCurrentMultiTrack = 0;
     sPlayingMusic = NULL;
@@ -270,10 +297,22 @@ void DynOS_Music_Stop() {
 }
 
 void DynOS_Music_Pause() {
+
+    // No music was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedMusicFreq == 0) {
+        return;
+    }
+
     SDL_PauseAudioDevice(DynOS_Music_GetDevice(), TRUE);
 }
 
 void DynOS_Music_Resume() {
+
+    // No music was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedMusicFreq == 0) {
+        return;
+    }
+
     SDL_PauseAudioDevice(DynOS_Music_GetDevice(), FALSE);
 }
 
@@ -340,7 +379,9 @@ static SDL_AudioDeviceID DynOS_Sound_GetDevice(u8 aBank) {
     _Want.userdata = NULL;
     sSoundDeviceId[aBank] = SDL_OpenAudioDevice(NULL, 0, &_Want, &_Have, 0);
     if (sSoundDeviceId == 0) {
-        sys_fatal("DynOS_Sound_GetDevice: Could not open sound device.");
+        sys_fatal("DynOS_Sound_GetDevice: Could not open sound device. (%s)", SDL_GetError());
+    }else{
+        printf("DynOS_Sound_GetDevice: sound device opened\n");
     }
     SDL_PauseAudioDevice(sSoundDeviceId[aBank], 0);
     return sSoundDeviceId[aBank];
@@ -372,7 +413,7 @@ bool DynOS_Sound_LoadWav(const String& aName, u8 aBank, const SysPath& aFilename
     u8 *_Data;
     s32 _Length;
     if (!SDL_LoadWAV(aFilename.c_str(), &_Spec, &_Data, (u32 *) &_Length)) {
-        sys_fatal("DynOS_Sound_LoadWav: Unable to load file %s.", aFilename.c_str());
+        sys_fatal("DynOS_Sound_LoadWav: Unable to load file %s. (%s)", aFilename.c_str(), SDL_GetError());
         return false;
     }
 
@@ -430,6 +471,12 @@ bool DynOS_Sound_LoadPresets(const SysPath &aFilename, const SysPath &aFolder) {
 }
 
 void DynOS_Sound_Play(const String& aName, f32 *aPos) {
+
+    // No sound was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedSoundFreq == 0) {
+        return;
+    }
+
     s32 _SoundDataIndex = sLoadedSounds.FindIf([&aName](const SoundData *aSoundData) { return aSoundData->mName == aName; });
     if (_SoundDataIndex == -1) {
         return;
@@ -461,11 +508,23 @@ void DynOS_Sound_Play(const String& aName, f32 *aPos) {
 }
 
 void DynOS_Sound_Stop(u8 aBank) {
+
+    // No sound was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedSoundFreq == 0) {
+        return;
+    }
+    
     SDL_ClearQueuedAudio(DynOS_Sound_GetDevice(aBank));
     sPlayingSound = NULL;
 }
 
 bool DynOS_Sound_IsPlaying(const String& aName) {
+
+    // No sound was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedSoundFreq == 0) {
+        return false;
+    }
+    
     s32 _SoundDataIndex = sLoadedSounds.FindIf([&aName](const SoundData *aSoundData) { return aSoundData->mName == aName; });
     if (_SoundDataIndex == -1) {
         return false;
@@ -488,6 +547,12 @@ bool DynOS_Sound_IsPlaying(const String& aName) {
 }
 
 bool DynOS_Sound_IsPlaying(u8 aBank) {
+
+    // No sound was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedSoundFreq == 0) {
+        return false;
+    }
+    
     return SDL_GetQueuedAudioSize(DynOS_Sound_GetDevice(aBank)) != 0;
 }
 
@@ -570,7 +635,9 @@ static SDL_AudioDeviceID DynOS_Jingle_GetDevice() {
     _Want.userdata = NULL;
     sJingleDeviceId = SDL_OpenAudioDevice(NULL, 0, &_Want, &_Have, 0);
     if (sJingleDeviceId == 0) {
-        sys_fatal("DynOS_Jingle_GetDevice: Could not open jingle device.");
+        sys_fatal("DynOS_Jingle_GetDevice: Could not open jingle device. (%s)", SDL_GetError());
+    }else{
+        printf("DynOS_Jingle_GetDevice: jingle device opened\n");
     }
     SDL_PauseAudioDevice(sJingleDeviceId, 0);
     return sJingleDeviceId;
@@ -604,7 +671,7 @@ bool DynOS_Jingle_LoadWav(const String &aName, const SysPath &aFilename, s32 aLo
     u8 *_Data;
     s32 _Length;
     if (!SDL_LoadWAV(aFilename.c_str(), &_Spec, &_Data, (u32 *) &_Length)) {
-        sys_fatal("DynOS_Jingle_LoadWav: Unable to load file %s.", aFilename.c_str());
+        sys_fatal("DynOS_Jingle_LoadWav: Unable to load file %s. (%s)", aFilename.c_str(), SDL_GetError());
         return false;
     }
     
@@ -663,6 +730,12 @@ bool DynOS_Jingle_LoadPresets(const SysPath &aFilename, const SysPath &aFolder) 
 }
 
 void DynOS_Jingle_Play(const String& aName) {
+
+    // No jingle was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedJingleFreq == 0) {
+        return;
+    }
+    
     s32 _JingleDataIndex = sLoadedJingles.FindIf([&aName](const JingleData *aJingleData) { return aJingleData->mName == aName; });
     if (_JingleDataIndex == -1) {
         return;
@@ -679,6 +752,12 @@ void DynOS_Jingle_Play(const String& aName) {
 }
 
 void DynOS_Jingle_Stop() {
+
+    // No jingle was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedJingleFreq == 0) {
+        return;
+    }
+    
     SDL_LockAudioDevice(DynOS_Jingle_GetDevice());
     sPlayingJingle = NULL;
     SDL_UnlockAudioDevice(DynOS_Jingle_GetDevice());
@@ -686,14 +765,32 @@ void DynOS_Jingle_Stop() {
 }
 
 void DynOS_Jingle_Pause() {
+
+    // No jingle was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedJingleFreq == 0) {
+        return;
+    }
+    
     SDL_PauseAudioDevice(DynOS_Jingle_GetDevice(), TRUE);
 }
 
 void DynOS_Jingle_Resume() {
+
+    // No jingle was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedJingleFreq == 0) {
+        return;
+    }
+    
     SDL_PauseAudioDevice(DynOS_Jingle_GetDevice(), FALSE);
 }
 
 bool DynOS_Jingle_IsPlaying(const String& aName) {
+
+    // No jingle was loaded, we don't want to open an audio device (muOS issue)
+    if (detectedJingleFreq == 0) {
+        return false;
+    }
+    
     return (sPlayingJingle != NULL) && (aName.Empty() || sPlayingJingle->mName == aName);
 }
 
